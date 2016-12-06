@@ -5,7 +5,13 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.TimeUnit;
 
-public class Main {
+public class PowerOfWorkerThreads {
+
+    static long basetime = System.currentTimeMillis();
+
+    static long currentTime() {
+        return System.currentTimeMillis() - basetime;
+    }
 
     static abstract class AbstractTask extends RecursiveAction {
 
@@ -29,15 +35,15 @@ public class Main {
             return getClassNameAndHashCode() + " -> " + parentAsString + " at " + Thread.currentThread().getName();
         }
 
-        private final String getClassNameAndHashCode() {
+        private String getClassNameAndHashCode() {
             return getClass().getSimpleName() + "@" + hashCode();
         }
 
         @Override
         protected final void compute() {
-            System.out.println(this + " started");
+            System.out.println(this + " started at " + currentTime());
             doCompute();
-            System.out.println(this + " finished");
+            System.out.println(this + " finished at " + currentTime());
         }
 
         protected abstract void doCompute();
@@ -85,7 +91,10 @@ public class Main {
     }
 
     public static void main(String[] args) throws InterruptedException, IOException {
-        ForkJoinPool.commonPool().submit(new RootTask());
-        ForkJoinPool.commonPool().awaitTermination(25, TimeUnit.SECONDS);
+        ForkJoinPool myPool = new ForkJoinPool(2);
+        myPool.submit(new RootTask());
+        myPool.submit(new RootTask());
+        myPool.submit(new RootTask());
+        myPool.awaitTermination(125, TimeUnit.SECONDS);
     }
 }
