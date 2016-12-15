@@ -26,7 +26,7 @@ public class CommonPoolAsSingleton {
             System.out.println("New common pool's class-loader "
                     + newCommonPool.commonPool().getClass().getClassLoader());
         } catch(NullPointerException ex) {
-            System.out.println("Getting ForkJoinPool's source code for reloading it didn't work");
+            System.out.println("Getting ForkJoinPool's source code for reloading it didn't work\n\n");
         }
         createPoolFromNewClassLoader();
     }
