@@ -1,5 +1,7 @@
 package com.example;
 
+import com.example.management.ForkJoinPoolManaged;
+
 import java.io.IOException;
 import java.util.concurrent.*;
 
@@ -92,22 +94,25 @@ public class PowerOfWorkerThreads {
         }
     }
 
-    public static void main(String[] args) throws InterruptedException, IOException, ExecutionException {
+    public static void main(String[] args) throws Exception {
         // First argument controls maximum degree of parallelism. There will be fewer workers created in the beginning,
         // but number of workers can't extend this number.
         ForkJoinPool myPool = new ForkJoinPool(4);
+        new ForkJoinPoolManaged(myPool).registerMBean();
         // We create the following task tree in the example:
         // RootTask -> 3 IntermediateTasks -> 3 LeafTasks
         // IntermediateTask and LeafTask takes 3 second to finish.
+        System.in.read();
         ForkJoinTask<Void> task1 = myPool.submit(new RootTask());
         ForkJoinTask<Void> task2 = myPool.submit(new RootTask());
         ForkJoinTask<Void> task3 = myPool.submit(new RootTask());
         // Waiting to finish
         task1.get(); task2.get(); task3.get();
         // Sequentially it would take 81 seconds.
-        System.out.format("Computation finished after %ds" + currentTime() / 1000);
+        System.out.format("Computation finished after %d seconds.  Sequentially it would take 81 seconds.", currentTime() / 1000);
         // As ForkJoinPool uses daemon threads, we don't have to gracefully shut them down as we do with a ThreadPoolExecutor
         // ThreadPooExecutor.shutdown()
         // ThreadPoolExecutor.awaitTermination() etc...
+        System.in.read();
     }
 }
