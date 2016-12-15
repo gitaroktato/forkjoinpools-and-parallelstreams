@@ -16,7 +16,9 @@ public class FIFOOrLIFO {
     static abstract class AbstractTask extends RecursiveAction {
 
         protected final void intensiveComputation() {
-            IntStream.of(1, 10_000).forEach(d -> { float dummy = (float) (3.14F / 8.4392 * Math.random() / 5.123415569);});
+            IntStream.of(1, 10_000).forEach(d -> {
+                float dummy = (float) (3.14F / 8.4392 * Math.random() / 5.123415569);
+            });
         }
     }
 
