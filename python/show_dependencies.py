@@ -1,10 +1,13 @@
 #!/usr/bin/python
 import os
+import json
+import flask
 import matplotlib.pyplot as plt
 import networkx as nx
+from networkx.readwrite import json_graph
 
 class_names = ['ForkJoinPool']
-jdk8_root_folder = '../jdk8/src/share/classes'
+jdk8_root_folder = 'C:\Users\Oresztesz_Margaritis\IdeaProjects\jdk8\src\share\classes'
 
 def find_in_path(path, name):
     classes_found = set()
@@ -32,16 +35,28 @@ results_dict['RecursiveAction'] = list(find_in_path(jdk8_root_folder, 'Recursive
 results_dict['RecursiveTask'] = list(find_in_path(jdk8_root_folder, 'RecursiveTask'))
 
 # Second level interests
-results_dict['Spliterator'] = list(find_in_path(jdk8_root_folder, 'Spliterator'))
+# results_dict['Spliterator'] = list(find_in_path(jdk8_root_folder, 'Spliterator'))
 results_dict['AbstractTask'] = list(find_in_path(jdk8_root_folder, 'AbstractTask'))
 
 
 # for class_name in results_dict['ForkJoinPool']:
 #     results_dict[class_name] = list(find_in_path(jdk8_root_folder, class_name))
 
-G = nx.DiGraph()
+G = nx.Graph()
 nx.from_dict_of_lists(results_dict, create_using=G)
-pos = nx.spring_layout(G)
-nx.draw_networkx_labels(G, pos, fontsize=14)
-nx.draw_networkx_edges(G, pos, edge_color='b', alpha=0.4, arrows=True)
-plt.show()
+for n in G:
+    G.node[n]['name'] = n
+# write json formatted data
+d = json_graph.node_link_data(G) # node-link format to serialize
+# write json
+json.dump(d, open('python/html/force.json','w'))
+print('Wrote node-link JSON data to force/force.json')
+
+# Serve the file over http to allow for cross origin requests
+app = flask.Flask(__name__, static_folder="html")
+
+@app.route('/<path:path>')
+def static_proxy(path):
+  return app.send_static_file(path)
+print('\nGo to http://localhost:8000/force.html to see the example\n')
+app.run(port=8000)
