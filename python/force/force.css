@@ -1,8 +1,8 @@
 
 path.link {
   fill: none;
-  stroke: #666;
-  stroke-width: 1.5px;
+  stroke: #6699ff;
+  stroke-width: 1px;
 }
 
 circle {
@@ -13,6 +13,6 @@ circle {
 
 text {
   fill: #000;
-  font: 10px sans-serif;
+  font: 12px sans-serif;
   pointer-events: none;
 }

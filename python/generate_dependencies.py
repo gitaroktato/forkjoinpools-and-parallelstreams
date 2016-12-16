@@ -34,8 +34,22 @@ results_dict['RecursiveAction'] = list(find_in_path(jdk8_root_folder, 'Recursive
 results_dict['RecursiveTask'] = list(find_in_path(jdk8_root_folder, 'RecursiveTask'))
 
 # Second level interests
-# results_dict['Spliterator'] = list(find_in_path(jdk8_root_folder, 'Spliterator'))
+results_dict['Spliterator'] = list(find_in_path(jdk8_root_folder, 'Spliterator'))
 results_dict['AbstractTask'] = list(find_in_path(jdk8_root_folder, 'AbstractTask'))
+results_dict['ForEachOps'] = list(find_in_path(jdk8_root_folder, 'ForEachOps'))
+results_dict['FindOps'] = list(find_in_path(jdk8_root_folder, 'FindOps'))
+results_dict['MatchOps'] = list(find_in_path(jdk8_root_folder, 'MatchOps'))
+results_dict['SliceOps'] = list(find_in_path(jdk8_root_folder, 'SliceOps'))
+results_dict['ReduceOps'] = list(find_in_path(jdk8_root_folder, 'ReduceOps'))
+results_dict['DistinctOps'] = list(find_in_path(jdk8_root_folder, 'DistinctOps'))
+results_dict['SortedOps'] = list(find_in_path(jdk8_root_folder, 'SortedOps'))
+# Third level interests
+results_dict['DoublePipeline'] = list(find_in_path(jdk8_root_folder, 'DoublePipeline'))
+results_dict['LongPipeline'] = list(find_in_path(jdk8_root_folder, 'LongPipeline'))
+results_dict['ReferencePipeline'] = list(find_in_path(jdk8_root_folder, 'ReferencePipeline'))
+results_dict['IntPipeline'] = list(find_in_path(jdk8_root_folder, 'IntPipeline'))
+# Fourth level
+results_dict['StreamSupport'] = list(find_in_path(jdk8_root_folder, 'StreamSupport'))
 
 
 # for class_name in results_dict['ForkJoinPool']:
@@ -48,5 +62,5 @@ for n in G:
 # write json formatted data
 d = json_graph.node_link_data(G) # node-link format to serialize
 # write json
-json.dump(d, open('python/html/force.json','w'))
+json.dump(d, open('python/force/force.json','w'))
 print('Wrote node-link JSON data to force/force.json')
