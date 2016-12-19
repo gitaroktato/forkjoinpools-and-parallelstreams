@@ -1,9 +1,6 @@
 #!/usr/bin/python
 import os
 import json
-import matplotlib.pyplot as plt
-import networkx as nx
-from networkx.readwrite import json_graph
 
 class_names = ['ForkJoinPool']
 jdk8_root_folder = 'C:\Users\Oresztesz_Margaritis\IdeaProjects\jdk8\src\share\classes'
@@ -55,12 +52,13 @@ results_dict['StreamSupport'] = list(find_in_path(jdk8_root_folder, 'StreamSuppo
 # for class_name in results_dict['ForkJoinPool']:
 #     results_dict[class_name] = list(find_in_path(jdk8_root_folder, class_name))
 
-G = nx.Graph()
-nx.from_dict_of_lists(results_dict, create_using=G)
-for n in G:
-    G.node[n]['name'] = n
-# write json formatted data
-d = json_graph.node_link_data(G) # node-link format to serialize
+json_format = []
+for key in results_dict:
+    adjancency_list = results_dict[key]
+    json_format.append({'name':key, 'size':1, 'imports': [element for element in adjancency_list]})
+    for element in adjancency_list:
+        if element not in results_dict:
+            json_format.append({'name':element, 'size':1, 'imports': []})
 # write json
-json.dump(d, open('python/force/force.json','w'))
+json.dump(json_format, open('python/force/forkjoin-imports.json','w'))
 print('Wrote node-link JSON data to force/force.json')
