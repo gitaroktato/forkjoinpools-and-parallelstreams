@@ -32,7 +32,7 @@ results_dict['CountedCompleter'] = list(find_in_path(jdk8_root_folder, 'CountedC
 results_dict['ForkJoinTask'] = list(find_in_path(jdk8_root_folder, 'ForkJoinTask'))
 results_dict['RecursiveAction'] = list(find_in_path(jdk8_root_folder, 'RecursiveAction'))
 results_dict['RecursiveTask'] = list(find_in_path(jdk8_root_folder, 'RecursiveTask'))
-
+results_dict['ManagedBlocker'] = list(find_in_path(jdk8_root_folder, 'ManagedBlocker'))
 # Second level interests
 results_dict['Spliterator'] = list(find_in_path(jdk8_root_folder, 'Spliterator'))
 results_dict['AbstractTask'] = list(find_in_path(jdk8_root_folder, 'AbstractTask'))

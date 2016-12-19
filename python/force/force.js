@@ -1,6 +1,6 @@
 
-var w = 1280,
-    h = 800;
+var w = 1920,
+    h = 1280;
 
 var vis = d3.select("#chart")
   .append("svg:svg")
@@ -9,8 +9,8 @@ var vis = d3.select("#chart")
 
 d3.json("./force.json", function(json) {
   var force = d3.layout.force()
-      .charge(-400)
-      .linkDistance(260)
+      .charge(-300)
+      .linkDistance(400)
       .nodes(json.nodes)
       .links(json.links)
       .size([w, h])
