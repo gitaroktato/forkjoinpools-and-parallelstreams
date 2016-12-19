@@ -47,6 +47,7 @@ results_dict['ReferencePipeline'] = list(find_in_path(jdk8_root_folder, 'Referen
 results_dict['IntPipeline'] = list(find_in_path(jdk8_root_folder, 'IntPipeline'))
 # Fourth level
 results_dict['StreamSupport'] = list(find_in_path(jdk8_root_folder, 'StreamSupport'))
+# results_dict['Stream'] = list(find_in_path(jdk8_root_folder, 'Stream'))
 
 
 # for class_name in results_dict['ForkJoinPool']:
