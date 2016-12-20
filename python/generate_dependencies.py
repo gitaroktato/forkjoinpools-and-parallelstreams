@@ -1,6 +1,11 @@
 #!/usr/bin/python
+"""
+Python program that uses NetwrokX to generate dependency graph.
+This helps in better understanding of the usage of ForkJoinPool in JDK 8
+You can use Gephi to import and visualize graphml graph formats.
+"""
 import os
-import json
+import networkx as nx
 
 class_names = ['ForkJoinPool']
 jdk8_root_folder = 'C:\Users\Oresztesz_Margaritis\IdeaProjects\jdk8\src\share\classes'
@@ -47,19 +52,13 @@ results_dict['ReferencePipeline'] = list(find_in_path(jdk8_root_folder, 'Referen
 results_dict['IntPipeline'] = list(find_in_path(jdk8_root_folder, 'IntPipeline'))
 # Fourth level
 results_dict['StreamSupport'] = list(find_in_path(jdk8_root_folder, 'StreamSupport'))
-# results_dict['Stream'] = list(find_in_path(jdk8_root_folder, 'Stream'))
+results_dict['Stream'] = list(find_in_path(jdk8_root_folder, 'Stream'))
 
-
-# for class_name in results_dict['ForkJoinPool']:
-#     results_dict[class_name] = list(find_in_path(jdk8_root_folder, class_name))
-
-json_format = []
-for key in results_dict:
-    adjancency_list = results_dict[key]
-    json_format.append({'name':key, 'size':1, 'imports': [element for element in adjancency_list]})
-    for element in adjancency_list:
-        if element not in results_dict:
-            json_format.append({'name':element, 'size':1, 'imports': []})
-# write json
-json.dump(json_format, open('python/force/forkjoin-imports.json','w'))
-print('Wrote node-link JSON data to force/force.json')
+G = nx.DiGraph()
+nx.from_dict_of_lists(results_dict, create_using=G)
+# We have to reverse the graph, adjancency list shows incoming edges.
+G.reverse(copy=False)
+for n in G:
+    G.node[n]['name'] = n
+# write graphml
+nx.write_graphml(G, "fork-join-pool.graphml")
