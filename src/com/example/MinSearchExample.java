@@ -66,9 +66,9 @@ public class MinSearchExample {
     public static void main(String[] args) {
         int[] randomSeed = IntStream.generate(() -> ThreadLocalRandom.current().nextInt(0, 10000))
                 .limit(100).toArray();
-        // Min search in stream
+        // Min search in parallel stream
         System.out.println("Minimum found as stream " +
-                Arrays.stream(randomSeed).min().getAsInt());
+                Arrays.stream(randomSeed).parallel().min().getAsInt());
         // Min search in fork-join pool
         Integer forkJoinResult = ForkJoinPool.commonPool().invoke(
                 new MinFinder(randomSeed, 10));
