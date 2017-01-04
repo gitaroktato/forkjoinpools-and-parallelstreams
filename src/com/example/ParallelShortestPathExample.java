@@ -92,7 +92,7 @@ public class ParallelShortestPathExample {
         protected int[][] compute() {
             int size = graph.size();
             int[][] currentIteration = new int[size][size];
-            initCurrentIteration(currentIteration);
+            initializeShortestPathMatrix(graph, graph.size(), currentIteration);
             for (int k = 0; k < size; k++) {
                 int middle = size / 2;
                 // Split matrix into regions
@@ -126,11 +126,12 @@ public class ParallelShortestPathExample {
             }
         }
 
-        private void initCurrentIteration(int[][] currentIteration) {
-            initializeShortestPathMatrix(graph, graph.size(), currentIteration);
-        }
     }
 
+    /**
+     * Sub-computation on one-quarter of the graph.
+     * See URL in class documentation for explanation.
+     */
     static class ParallelFloydSubComputation extends RecursiveTask<int[][]> {
 
         private final int[][] currentPathMatrix;
