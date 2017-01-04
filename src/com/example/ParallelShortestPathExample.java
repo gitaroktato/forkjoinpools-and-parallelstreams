@@ -179,18 +179,35 @@ public class ParallelShortestPathExample {
         gr.addEdge(1,3);
         gr.addEdge(3,2);
         gr.addEdge(3,0);
-        // Make the computation and check the results.
-        int[][] allShortestPaths = sequentialFloyd(gr);
+        // Expected value
         final int infinity = Integer.MAX_VALUE;
         int[][] expectedResult = new int[][]{
-            {0,1,2,2},
-            {2,0,1,1},
-            {infinity,infinity,0,infinity},
-            {1,2,1,0}
+                {0,1,2,2},
+                {2,0,1,1},
+                {infinity,infinity,0,infinity},
+                {1,2,1,0}
         };
-        assertEquals(expectedResult, allShortestPaths);
-        ForkJoinTask<int[][]> parallelShortestPath = ForkJoinPool.commonPool().submit(new ParallelFloyd(gr));
-        assertEquals(expectedResult, parallelShortestPath.get());
+        // Make the computation and check the results.
+        long fromTime = System.nanoTime();
+        int[][] sequentialShortestPath = sequentialFloyd(gr);
+        long sequentialDuration = System.nanoTime() - fromTime;
+        assertEquals(expectedResult, sequentialShortestPath);
+        // Parallel computation with results.
+        fromTime = System.nanoTime();
+        ForkJoinTask<int[][]> parallelShortestPathTask = ForkJoinPool.commonPool().submit(new ParallelFloyd(gr));
+        int[][] parallelShortestPath = parallelShortestPathTask.get();
+        long parallelDuration = System.nanoTime() - fromTime;
+        assertEquals(expectedResult, parallelShortestPath);
+        // Parallel computation again (Warm-up is done in previous step.
+        fromTime = System.nanoTime();
+        parallelShortestPathTask = ForkJoinPool.commonPool().submit(new ParallelFloyd(gr));
+        parallelShortestPath = parallelShortestPathTask.get();
+        long parallelDurationSecondTime = System.nanoTime() - fromTime;
+        assertEquals(expectedResult, parallelShortestPath);
+        // Computation time
+        System.out.print("Computation time sequential: " + sequentialDuration
+                + " parallel: " + parallelDuration
+                + " parallel second time: " + parallelDurationSecondTime);
     }
 
     private static void assertEquals(int[][] expected, int[][] actual) {
