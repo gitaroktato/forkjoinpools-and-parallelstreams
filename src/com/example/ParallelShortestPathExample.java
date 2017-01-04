@@ -1,6 +1,7 @@
 package com.example;
 
-import java.util.Arrays;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
 /**
@@ -77,19 +78,26 @@ public class ParallelShortestPathExample {
      */
     static class ParallelFloyd extends RecursiveTask<int[][]> {
 
-        private int[][] computeDirectly(int fromIndex, int toIndex, int[][] array) {
+        private final Graph graph;
+
+        ParallelFloyd(Graph graph) {
+            this.graph = graph;
+        }
+
+        private int[][] computeDirectly(int fromIndex, int toIndex, int step, int[][] currentIteration) {
+            int[][] result = new int[currentIteration.length][currentIteration.length];
             for (int i = fromIndex; i < toIndex; i++) {
                 for (int j = fromIndex; j < toIndex; j++) {
                     // We have to be careful not to overflow
                     int sumOfTwoPaths;
-                    if (array[i][k] == Integer.MAX_VALUE
-                            || array[k][j] == Integer.MAX_VALUE) {
+                    if (currentIteration[i][step] == Integer.MAX_VALUE
+                            || currentIteration[step][j] == Integer.MAX_VALUE) {
                         sumOfTwoPaths = Integer.MAX_VALUE;
                     } else {
-                        sumOfTwoPaths = array[i][k] + array[k][j];
+                        sumOfTwoPaths = currentIteration[i][step] + currentIteration[step][j];
                     }
                     // Calculating next iteration
-                    result[i][j] = Math.min(array[i][j], sumOfTwoPaths);
+                    result[i][j] = Math.min(currentIteration[i][j], sumOfTwoPaths);
                 }
             }
             return result;
@@ -97,11 +105,30 @@ public class ParallelShortestPathExample {
 
         @Override
         protected int[][] compute() {
-            return null;
+            int size = graph.size();
+            int[][] currentIteration = new int[size][size];
+            initCurrentIteration(currentIteration);
+            for (int k = 0; k < size; k++) {
+                currentIteration = computeDirectly(0, size, k, currentIteration);
+            }
+            return currentIteration;
+        }
+
+        private void initCurrentIteration(int[][] currentIteration) {
+            for (int i = 0; i < graph.size(); i++) {
+                for (int j = 0; j < graph.size(); j++) {
+                    if (i == j)
+                        currentIteration[i][j] = 0;
+                    else if (graph.hasEdge(i, j))
+                        currentIteration[i][j] = 1;
+                    else
+                        currentIteration[i][j] = Integer.MAX_VALUE;
+                }
+            }
         }
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // See example URL for the graph, that I represent.
         Graph gr = new Graph(4);
         gr.addEdge(0,1);
@@ -118,7 +145,9 @@ public class ParallelShortestPathExample {
             {infinity,infinity,0,infinity},
             {1,2,1,0}
         };
-        assertEquals(allShortestPaths, expectedResult);
+        assertEquals(expectedResult, allShortestPaths);
+        ForkJoinTask<int[][]> parallelShortestPath = ForkJoinPool.commonPool().submit(new ParallelFloyd(gr));
+        assertEquals(expectedResult, parallelShortestPath.get());
     }
 
     private static void assertEquals(int[][] expected, int[][] actual) {
@@ -129,7 +158,7 @@ public class ParallelShortestPathExample {
         for (int i = 0; i < expected.length; i++) {
             for (int j = 0; j < expected.length; j++) {
                 if (actual[i][j] != expected[i][j])
-                    throw new RuntimeException(String.format("Got different result at [%d][%d]. %d != %d",
+                    throw new RuntimeException(String.format("Got different result at [%d][%d]: %d != %d",
                                     i, j, expected[i][j], actual[i][j]));
             }
         }
