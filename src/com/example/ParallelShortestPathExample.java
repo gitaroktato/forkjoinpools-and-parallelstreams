@@ -40,16 +40,7 @@ public class ParallelShortestPathExample {
         int size = gr.size();
         int[][] currentIteration = new int[size][size];
         int[][] nextIteration = new int[size][size];
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                if (i == j)
-                    currentIteration[i][j] = 0;
-                else if (gr.hasEdge(i, j))
-                    currentIteration[i][j] = 1;
-                else
-                    currentIteration[i][j] = Integer.MAX_VALUE;
-            }
-        }
+        initializeShortestPathMatrix(gr, size, currentIteration);
         // We have to iterate N times to get proper size for all the paths.
         // No path can be longer than N or it would contain a node twice.
         for (int k = 0; k < size; k++) {
@@ -72,6 +63,19 @@ public class ParallelShortestPathExample {
         return nextIteration;
     }
 
+    private static void initializeShortestPathMatrix(Graph gr, int size, int[][] currentIteration) {
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (i == j)
+                    currentIteration[i][j] = 0;
+                else if (gr.hasEdge(i, j))
+                    currentIteration[i][j] = 1;
+                else
+                    currentIteration[i][j] = Integer.MAX_VALUE;
+            }
+        }
+    }
+
     /**
      * We split up the matrix into four sub-matrices.
      * Each iteration is computed in parallel and the aggregations are made afterwards.
@@ -84,47 +88,86 @@ public class ParallelShortestPathExample {
             this.graph = graph;
         }
 
-        private int[][] computeDirectly(int fromIndex, int toIndex, int step, int[][] currentIteration) {
-            int[][] result = new int[currentIteration.length][currentIteration.length];
-            for (int i = fromIndex; i < toIndex; i++) {
-                for (int j = fromIndex; j < toIndex; j++) {
-                    // We have to be careful not to overflow
-                    int sumOfTwoPaths;
-                    if (currentIteration[i][step] == Integer.MAX_VALUE
-                            || currentIteration[step][j] == Integer.MAX_VALUE) {
-                        sumOfTwoPaths = Integer.MAX_VALUE;
-                    } else {
-                        sumOfTwoPaths = currentIteration[i][step] + currentIteration[step][j];
-                    }
-                    // Calculating next iteration
-                    result[i][j] = Math.min(currentIteration[i][j], sumOfTwoPaths);
-                }
-            }
-            return result;
-        }
-
         @Override
         protected int[][] compute() {
             int size = graph.size();
             int[][] currentIteration = new int[size][size];
             initCurrentIteration(currentIteration);
             for (int k = 0; k < size; k++) {
-                currentIteration = computeDirectly(0, size, k, currentIteration);
+                int middle = size / 2;
+                // Split matrix into regions
+                ParallelFloydSubComputation topLeft = new ParallelFloydSubComputation(currentIteration,
+                        0, middle, 0, middle, k);
+                ParallelFloydSubComputation topRight = new ParallelFloydSubComputation(currentIteration,
+                        middle, size, 0, middle, k);
+                ParallelFloydSubComputation bottomLeft = new ParallelFloydSubComputation(currentIteration,
+                        0, middle, middle, size, k);
+                ParallelFloydSubComputation bottomRight = new ParallelFloydSubComputation(currentIteration,
+                        middle, size, middle, size, k);
+                topLeft.fork();
+                topRight.fork();
+                bottomLeft.fork();
+                bottomRight.fork();
+                // Merge the result
+                mergeRegion(currentIteration, topLeft);
+                mergeRegion(currentIteration, topRight);
+                mergeRegion(currentIteration, bottomLeft);
+                mergeRegion(currentIteration, bottomRight);
             }
             return currentIteration;
         }
 
-        private void initCurrentIteration(int[][] currentIteration) {
-            for (int i = 0; i < graph.size(); i++) {
-                for (int j = 0; j < graph.size(); j++) {
-                    if (i == j)
-                        currentIteration[i][j] = 0;
-                    else if (graph.hasEdge(i, j))
-                        currentIteration[i][j] = 1;
-                    else
-                        currentIteration[i][j] = Integer.MAX_VALUE;
+        private void mergeRegion(int[][] currentIteration, ParallelFloydSubComputation computation) {
+            int[][] result = computation.join();
+            for (int i = computation.fromX; i < computation.toX; i++) {
+                for (int j = computation.fromY; j < computation.toY; j++) {
+                    currentIteration[i][j] = result[i][j];
                 }
             }
+        }
+
+        private void initCurrentIteration(int[][] currentIteration) {
+            initializeShortestPathMatrix(graph, graph.size(), currentIteration);
+        }
+    }
+
+    static class ParallelFloydSubComputation extends RecursiveTask<int[][]> {
+
+        private final int[][] currentPathMatrix;
+        private final int fromX;
+        private final int toX;
+        private final int fromY;
+        private final int toY;
+        private final int step;
+
+        ParallelFloydSubComputation(int[][] currentPathMatrix,
+                                    int fromX, int toX, int fromY, int toY, int step) {
+            this.currentPathMatrix = currentPathMatrix;
+            this.fromX = fromX;
+            this.toX = toX;
+            this.fromY = fromY;
+            this.toY = toY;
+            this.step = step;
+        }
+
+        @Override
+        protected int[][] compute() {
+            int[][] result = new int[currentPathMatrix.length][currentPathMatrix.length];
+            for (int i = fromX; i < toX; i++) {
+                for (int j = fromY; j < toY; j++) {
+                    // We have to be careful not to overflow
+                    int sumOfTwoPaths;
+                    if (currentPathMatrix[i][step] == Integer.MAX_VALUE
+                            || currentPathMatrix[step][j] == Integer.MAX_VALUE) {
+                        sumOfTwoPaths = Integer.MAX_VALUE;
+                    } else {
+                        sumOfTwoPaths = currentPathMatrix[i][step] + currentPathMatrix[step][j];
+                    }
+                    // Calculating next iteration
+                    result[i][j] = Math.min(currentPathMatrix[i][j], sumOfTwoPaths);
+                }
+            }
+            return result;
         }
     }
 
