@@ -2,6 +2,7 @@ package com.example;
 
 import java.util.Arrays;
 import java.util.OptionalInt;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.ThreadLocalRandom;
@@ -63,12 +64,18 @@ public class MinSearchExample {
         }
     }
 
-    public static void main(String[] args) {
-        int[] randomSeed = IntStream.generate(() -> ThreadLocalRandom.current().nextInt(0, 10000))
+    public static void main(String[] args) throws ExecutionException, InterruptedException {
+        int[] randomSeed = IntStream.generate(() -> ThreadLocalRandom.current()
+                .nextInt(0, 10000))
                 .limit(100).toArray();
         // Min search in parallel stream
         System.out.println("Minimum found as stream " +
                 Arrays.stream(randomSeed).parallel().min().getAsInt());
+        // Minimum search from custom fork-join pool
+        ForkJoinPool myPool = new ForkJoinPool(2);
+        myPool.submit(() -> System.out.println(
+                Arrays.stream(randomSeed).parallel().min().getAsInt())
+        ).get();
         // Min search in fork-join pool
         Integer forkJoinResult = ForkJoinPool.commonPool().invoke(
                 new MinFinder(randomSeed, 10));
