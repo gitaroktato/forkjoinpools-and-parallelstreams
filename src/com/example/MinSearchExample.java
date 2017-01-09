@@ -70,11 +70,16 @@ public class MinSearchExample {
                 .limit(100).toArray();
         // Min search in parallel stream
         System.out.println("Minimum found as stream " +
-                Arrays.stream(randomSeed).parallel().min().getAsInt());
+                Arrays.stream(randomSeed)
+                        .parallel()
+                        .min().getAsInt());
         // Minimum search from custom fork-join pool
-        ForkJoinPool myPool = new ForkJoinPool(2);
+        ForkJoinPool myPool = new ForkJoinPool(6);
         myPool.submit(() -> System.out.println(
-                Arrays.stream(randomSeed).parallel().min().getAsInt())
+                Arrays.stream(randomSeed)
+                        .parallel()
+                        .peek(i -> System.err.println(Thread.currentThread().getName()))
+                        .min().getAsInt())
         ).get();
         // Min search in fork-join pool
         Integer forkJoinResult = ForkJoinPool.commonPool().invoke(
